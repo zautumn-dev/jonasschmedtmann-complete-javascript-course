@@ -89,7 +89,7 @@ function displayMovements(movements = []) {
     </div>
     `;
 
-    return result + htmlTemplate;
+    return htmlTemplate + result;
   }, '');
 
   containerMovements.insertAdjacentHTML('afterbegin', movementsHtml);
@@ -161,15 +161,76 @@ btnLogin.addEventListener('click', function (e) {
 
   containerApp.style.opacity = 1;
 
-  inputLoginUsername.value = inputLoginPin.value = '';
-  inputLoginPin.blur();
-  inputLoginUsername.blur();
+  // inputLoginUsername.value = inputLoginPin.value = '';
+  // inputLoginPin.blur();
 
-  displayMovements(currentAccount.movements);
-  calcDisplayBalance(currentAccount.movements);
-  calcDisplaySummaryIn(currentAccount.movements);
-  calcDisplaySummaryOut(currentAccount.movements);
-  calcDisplaySummaryInterest(currentAccount);
+  clearInput(inputLoginUsername, inputLoginPin);
+
+  calcAnyAmount(currentAccount);
+});
+
+function calcAnyAmount(account) {
+  displayMovements(account.movements);
+  calcDisplayBalance(account.movements);
+  calcDisplaySummaryIn(account.movements);
+  calcDisplaySummaryOut(account.movements);
+  calcDisplaySummaryInterest(account);
+}
+
+function clearInput(...inputs) {
+  inputs.forEach(input => {
+    input.value = '';
+    input.blur();
+  });
+}
+
+btnTransfer.addEventListener('click', e => {
+  e.preventDefault();
+
+  const transferUserName = inputTransferTo.value;
+  const transterAmount = inputTransferAmount.value - 0;
+
+  if (!transferUserName || !transterAmount) return;
+
+  console.log(transferUserName, transterAmount);
+
+  const currentAccountAmount = labelBalance.textContent.split(' ').at(0) - 0;
+
+  console.log(currentAccountAmount);
+  if (transterAmount <= 0 || transterAmount > currentAccountAmount) return;
+
+  const transferToUser = accounts.find(
+    account => account.userName === transferUserName,
+  );
+
+  if (transferToUser.userName === currentAccount.userName) return;
+
+  transferToUser.movements.push(transterAmount);
+  currentAccount.movements.push(-transterAmount);
+
+  clearInput(inputTransferTo, inputTransferAmount);
+
+  calcAnyAmount(currentAccount);
+});
+
+btnLoan.addEventListener('click', e => {
+  e.preventDefault();
+
+  const amount = inputLoanAmount.value - 0;
+
+  if (!Number.isNaN(amount) && amount <= 0) return;
+
+  console.log(amount);
+
+  currentAccount.movements.push(amount);
+
+  clearInput(inputLoanAmount);
+
+  calcAnyAmount(currentAccount);
+  console.log(accounts);
 });
 
 handleUserName(accounts);
+
+inputLoginUsername.value = 'js';
+inputLoginPin.value = '1111';
