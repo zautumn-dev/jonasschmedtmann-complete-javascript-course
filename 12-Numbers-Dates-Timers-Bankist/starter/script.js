@@ -83,19 +83,21 @@ const inputClosePin = document.querySelector('.form__input--pin');
 
 const displayMovements = function (movements, sort = false) {
   containerMovements.innerHTML = '';
+  console.log(currentAccount);
 
   const movs = sort ? movements.slice().sort((a, b) => a - b) : movements;
 
   movs.forEach(function (mov, i) {
     const type = mov > 0 ? 'deposit' : 'withdrawal';
 
+    // const {year,month,day,hour,minute}=
+
     const html = `
-      <div class="movements__row">
-        <div class="movements__type movements__type--${type}">${
-      i + 1
-    } ${type}</div>
-        <div class="movements__value">${mov}€</div>
-      </div>
+    <div class="movements__row">
+      <div class="movements__type movements__type--${type}">${i + 1} ${type}</div>
+      <div class="movements__date">${setTime(currentAccount.movementsDates.at(i))}</div>
+      <div class="movements__value">${mov} €</div>
+    </div>
     `;
 
     containerMovements.insertAdjacentHTML('afterbegin', html);
@@ -160,7 +162,7 @@ btnLogin.addEventListener('click', function (e) {
   e.preventDefault();
 
   currentAccount = accounts.find(
-    acc => acc.username === inputLoginUsername.value
+    acc => acc.username === inputLoginUsername.value,
   );
   console.log(currentAccount);
 
@@ -184,7 +186,7 @@ btnTransfer.addEventListener('click', function (e) {
   e.preventDefault();
   const amount = Number(inputTransferAmount.value);
   const receiverAcc = accounts.find(
-    acc => acc.username === inputTransferTo.value
+    acc => acc.username === inputTransferTo.value,
   );
   inputTransferAmount.value = inputTransferTo.value = '';
 
@@ -197,6 +199,9 @@ btnTransfer.addEventListener('click', function (e) {
     // Doing the transfer
     currentAccount.movements.push(-amount);
     receiverAcc.movements.push(amount);
+
+    currentAccount.movementsDates.push(new Date().toISOString());
+    receiverAcc.movementsDates.push(new Date().toISOString());
 
     // Update UI
     updateUI(currentAccount);
@@ -211,6 +216,7 @@ btnLoan.addEventListener('click', function (e) {
   if (amount > 0 && currentAccount.movements.some(mov => mov >= amount * 0.1)) {
     // Add movement
     currentAccount.movements.push(amount);
+    currentAccount.movementsDates.push(new Date().toISOString());
 
     // Update UI
     updateUI(currentAccount);
@@ -226,7 +232,7 @@ btnClose.addEventListener('click', function (e) {
     Number(inputClosePin.value) === currentAccount.pin
   ) {
     const index = accounts.findIndex(
-      acc => acc.username === currentAccount.username
+      acc => acc.username === currentAccount.username,
     );
     console.log(index);
     // .indexOf(23)
@@ -251,3 +257,42 @@ btnSort.addEventListener('click', function (e) {
 /////////////////////////////////////////////////
 /////////////////////////////////////////////////
 // LECTURES
+inputLoginUsername.value = 'js';
+inputLoginPin.value = '1111';
+
+btnLogin.click();
+
+function padStartNumber(number) {
+  return `${number}`.padStart(2, 0);
+}
+
+function setTime(time = Date.now()) {
+  console.log(time);
+  const date = new Date(time);
+
+  const year = date.getFullYear();
+  const month = padStartNumber(date.getMonth() + 1);
+  const day = padStartNumber(date.getDate());
+  const hour = padStartNumber(date.getHours());
+  const minute = padStartNumber(date.getMinutes());
+
+  return `${day}/${month}/${year} ${hour}:${minute}`;
+
+  return {
+    year,
+    month,
+    day,
+    hour,
+    minute,
+  };
+}
+
+setInterval(setLabelTime, 1000 * 60);
+
+function setLabelTime() {
+  // const {year,month,day,hour,minute}=
+
+  labelDate.textContent = setTime();
+}
+
+setLabelTime();
