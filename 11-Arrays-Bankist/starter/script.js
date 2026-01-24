@@ -75,10 +75,14 @@ const movements = [200, 450, -400, 3000, -650, -130, 70, 1300];
 
 /////////////////////////////////////////////////
 
-function displayMovements(movements = []) {
+function displayMovements(movements = [], sorted = false) {
   containerMovements.textContent = '';
 
-  const movementsHtml = movements.reduce((result, move, index) => {
+  const sortMovements = sorted
+    ? [...movements].sort((a, b) => a - b)
+    : movements;
+
+  const movementsHtml = sortMovements.reduce((result, move, index) => {
     const type = move > 0 ? 'deposit' : 'withdrawal';
 
     const htmlTemplate = `
@@ -192,11 +196,8 @@ btnTransfer.addEventListener('click', e => {
 
   if (!transferUserName || !transterAmount) return;
 
-  console.log(transferUserName, transterAmount);
-
   const currentAccountAmount = labelBalance.textContent.split(' ').at(0) - 0;
 
-  console.log(currentAccountAmount);
   if (transterAmount <= 0 || transterAmount > currentAccountAmount) return;
 
   const transferToUser = accounts.find(
@@ -220,14 +221,47 @@ btnLoan.addEventListener('click', e => {
 
   if (!Number.isNaN(amount) && amount <= 0) return;
 
-  console.log(amount);
-
   currentAccount.movements.push(amount);
 
   clearInput(inputLoanAmount);
 
   calcAnyAmount(currentAccount);
+});
+
+btnClose.addEventListener('click', function (e) {
+  e.preventDefault();
+
+  const currentAccountIndex = accounts.findIndex(
+    account => account.userName === currentAccount.userName,
+  );
+
+  const closeUserName = inputCloseUsername.value;
+  const closeUserPin = inputClosePin.value - 0;
+  console.log(closeUserPin, closeUserName);
+
+  if (!closeUserName || !closeUserPin) return;
+
+  const closeUserIndex = accounts.findIndex(
+    account =>
+      account.userName === closeUserName && account.pin === closeUserPin,
+  );
+
+  console.log(currentAccountIndex, closeUserIndex);
+  if (closeUserIndex === -1 || currentAccountIndex === closeUserIndex) return;
+
+  accounts.splice(closeUserIndex, 1);
+
   console.log(accounts);
+  clearInput(inputCloseUsername, inputClosePin);
+});
+
+let sorted = false;
+btnSort.addEventListener('click', function (e) {
+  e.preventDefault();
+
+  sorted = !sorted;
+
+  displayMovements(currentAccount.movements, sorted);
 });
 
 handleUserName(accounts);
