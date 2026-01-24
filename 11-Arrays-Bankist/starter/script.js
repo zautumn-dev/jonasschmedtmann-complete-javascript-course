@@ -74,3 +74,102 @@ const currencies = new Map([
 const movements = [200, 450, -400, 3000, -650, -130, 70, 1300];
 
 /////////////////////////////////////////////////
+
+function displayMovements(movements = []) {
+  containerMovements.textContent = '';
+
+  const movementsHtml = movements.reduce((result, move, index) => {
+    const type = move > 0 ? 'deposit' : 'withdrawal';
+
+    const htmlTemplate = `
+    <div class="movements__row">
+      <div class="movements__type movements__type--${type}">${index + 1} ${type}</div>
+      <div class="movements__date">3 days ago</div>
+      <div class="movements__value">${move} €</div>
+    </div>
+    `;
+
+    return result + htmlTemplate;
+  }, '');
+
+  containerMovements.insertAdjacentHTML('afterbegin', movementsHtml);
+  // containerMovements.innerHTML = movementsHtml;
+  // console.log(movementsHtml);
+}
+
+function createUserName(userName = '') {
+  return userName
+    .toLowerCase()
+    .split(' ')
+    .map(str => str.at(0))
+    .join('');
+}
+
+function handleUserName(accounts = []) {
+  accounts.forEach(account => {
+    Reflect.set(account, 'userName', createUserName(account.owner));
+  });
+}
+
+function calcDisplayBalance(movements = []) {
+  const totalBalance = movements.reduce((total, movement) => total + movement);
+  labelBalance.textContent = `${totalBalance} €`;
+}
+
+function calcDisplayAmount(movements = [], cb) {
+  return movements.filter(cb).reduce((total, movement) => total + movement);
+}
+
+function calcDisplaySummaryIn(movements = []) {
+  const amount = calcDisplayAmount(movements, movement => movement > 0);
+  labelSumIn.textContent = `${amount} €`;
+}
+
+function calcDisplaySummaryOut(movements = []) {
+  const amount = calcDisplayAmount(movements, movement => movement < 0);
+  labelSumOut.textContent = `${Math.abs(amount)} €`;
+}
+
+function calcDisplaySummaryInterest({ interestRate = 1, movements = [] }) {
+  const interest = movements
+    .filter(movement => movement > 0)
+    .map(movement => movement * (interestRate / 100))
+    .filter(interest => interest >= 1)
+    .reduce((totalInterest, interest) => totalInterest + interest, 0);
+
+  //   const interest =
+  //     calcDisplayAmount(movements, movement => movement > 0) * (1.2 / 100);
+  labelSumInterest.textContent = `${interest} €`;
+}
+
+let currentAccount = null;
+
+btnLogin.addEventListener('click', function (e) {
+  e.preventDefault();
+
+  const userName = inputLoginUsername.value;
+  const pin = inputLoginPin.value;
+
+  if (!userName || !pin) return;
+
+  currentAccount = accounts.find(account => account.userName === userName);
+
+  if (currentAccount?.pin !== pin - 0) return;
+  console.log('登陆成功');
+
+  labelWelcome.textContent = `欢迎回来~~ ${currentAccount.owner.split(' ').at(0)}`;
+
+  containerApp.style.opacity = 1;
+
+  inputLoginUsername.value = inputLoginPin.value = '';
+  inputLoginPin.blur();
+  inputLoginUsername.blur();
+
+  displayMovements(currentAccount.movements);
+  calcDisplayBalance(currentAccount.movements);
+  calcDisplaySummaryIn(currentAccount.movements);
+  calcDisplaySummaryOut(currentAccount.movements);
+  calcDisplaySummaryInterest(currentAccount);
+});
+
+handleUserName(accounts);
