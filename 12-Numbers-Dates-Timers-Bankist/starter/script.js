@@ -81,7 +81,30 @@ const inputClosePin = document.querySelector('.form__input--pin');
 /////////////////////////////////////////////////
 // Functions
 
-const displayMovements = function (movements, sort = false) {
+// function clacDaysPassed(){
+//   return `${clacDaysPassed(Date.now(), new Date(currentAccount.movementsDates.at(i)))}天前`
+// }
+
+function formatMovementDate(date, locale) {
+  const daysPassed = clacDaysPassed(Date.now(), new Date(date));
+
+  if (daysPassed === 0) return 'Today';
+  if (daysPassed === 1) return 'Yesterday';
+  if (daysPassed <= 7) return `${daysPassed} days ago`;
+  return new Intl.DateTimeFormat(locale).format(new Date(date));
+}
+
+function formatCurrency(movement, locale, currency) {
+  return new Intl.NumberFormat(locale, {
+    style: 'currency',
+    currency,
+  }).format(movement);
+}
+
+const displayMovements = function (
+  { movements, locale, currency },
+  sort = false,
+) {
   containerMovements.innerHTML = '';
   console.log(currentAccount);
 
@@ -95,9 +118,9 @@ const displayMovements = function (movements, sort = false) {
     const html = `
     <div class="movements__row">
       <div class="movements__type movements__type--${type}">${i + 1} ${type}</div>
-      <div class="movements__date">${`${clacDaysPassed(Date.now(), new Date(currentAccount.movementsDates.at(i)))}天前`}</div>
+      <div class="movements__date">${formatMovementDate(currentAccount.movementsDates.at(i), currentAccount.locale)}</div>
 
-      <div class="movements__value">${mov} €</div>
+      <div class="movements__value">${formatCurrency(mov, locale, currency)}</div>
     </div>
     `;
 
@@ -107,19 +130,27 @@ const displayMovements = function (movements, sort = false) {
 
 const calcDisplayBalance = function (acc) {
   acc.balance = acc.movements.reduce((acc, mov) => acc + mov, 0);
-  labelBalance.textContent = `${acc.balance}€`;
+  labelBalance.textContent = formatCurrency(
+    acc.balance,
+    acc.locale,
+    acc.currency,
+  );
 };
 
 const calcDisplaySummary = function (acc) {
   const incomes = acc.movements
     .filter(mov => mov > 0)
     .reduce((acc, mov) => acc + mov, 0);
-  labelSumIn.textContent = `${incomes}€`;
+  labelSumIn.textContent = formatCurrency(incomes, acc.locale, acc.currency);
 
   const out = acc.movements
     .filter(mov => mov < 0)
     .reduce((acc, mov) => acc + mov, 0);
-  labelSumOut.textContent = `${Math.abs(out)}€`;
+  labelSumOut.textContent = formatCurrency(
+    Math.abs(out),
+    acc.locale,
+    acc.currency,
+  );
 
   const interest = acc.movements
     .filter(mov => mov > 0)
@@ -129,7 +160,11 @@ const calcDisplaySummary = function (acc) {
       return int >= 1;
     })
     .reduce((acc, int) => acc + int, 0);
-  labelSumInterest.textContent = `${interest}€`;
+  labelSumInterest.textContent = formatCurrency(
+    interest,
+    acc.locale,
+    acc.currency,
+  );
 };
 
 const createUsernames = function (accs) {
@@ -145,7 +180,7 @@ createUsernames(accounts);
 
 const updateUI = function (acc) {
   // Display movements
-  displayMovements(acc.movements);
+  displayMovements(acc);
 
   // Display balance
   calcDisplayBalance(acc);
@@ -177,6 +212,11 @@ btnLogin.addEventListener('click', function (e) {
     // Clear input fields
     inputLoginUsername.value = inputLoginPin.value = '';
     inputLoginPin.blur();
+
+    labelDate.textContent = formatTime(currentAccount.locale, {
+      hour: '2-digit',
+      minute: '2-digit',
+    });
 
     // Update UI
     updateUI(currentAccount);
@@ -251,7 +291,7 @@ btnClose.addEventListener('click', function (e) {
 let sorted = false;
 btnSort.addEventListener('click', function (e) {
   e.preventDefault();
-  displayMovements(currentAccount.movements, !sorted);
+  displayMovements(currentAccount, !sorted);
   sorted = !sorted;
 });
 
@@ -293,14 +333,33 @@ function clacDaysPassed(time1, time2) {
   return Math.round((time1 - time2) / (1000 * 60 * 60 * 24));
 }
 
-console.log(clacDaysPassed(+new Date(2026, 1, 12), +new Date(2026, 1, 22)));
+// console.log(clacDaysPassed(+new Date(2026, 1, 12), +new Date(2026, 1, 22)));
 
 setInterval(setLabelTime, 1000 * 60);
 
 function setLabelTime() {
   // const {year,month,day,hour,minute}=
 
-  labelDate.textContent = setTime();
+  labelDate.textContent = formatTime(navigator.language, {
+    hour: '2-digit',
+    minute: '2-digit',
+  });
 }
 
+console.log(navigator.language);
+
+function formatTime(
+  locale = navigator.language,
+  options = {},
+  date = new Date(),
+) {
+  // hour: '2-digit',
+  // minute: '2-digit',
+  return new Intl.DateTimeFormat(locale, {
+    year: '2-digit',
+    month: '2-digit',
+    day: '2-digit',
+    ...options,
+  }).format(date);
+}
 setLabelTime();
