@@ -91,11 +91,12 @@ const displayMovements = function (movements, sort = false) {
     const type = mov > 0 ? 'deposit' : 'withdrawal';
 
     // const {year,month,day,hour,minute}=
-
+    // <div class="movements__date">${setTime(currentAccount.movementsDates.at(i))}</div>
     const html = `
     <div class="movements__row">
       <div class="movements__type movements__type--${type}">${i + 1} ${type}</div>
-      <div class="movements__date">${setTime(currentAccount.movementsDates.at(i))}</div>
+      <div class="movements__date">${`${clacDaysPassed(Date.now(), new Date(currentAccount.movementsDates.at(i)))}天前`}</div>
+
       <div class="movements__value">${mov} €</div>
     </div>
     `;
@@ -267,7 +268,6 @@ function padStartNumber(number) {
 }
 
 function setTime(time = Date.now()) {
-  console.log(time);
   const date = new Date(time);
 
   const year = date.getFullYear();
@@ -286,6 +286,14 @@ function setTime(time = Date.now()) {
     minute,
   };
 }
+
+function clacDaysPassed(time1, time2) {
+  // [time1, time2] = [time1, time2].sort((a, b) => b - a);
+  // console.log(time1, time2);
+  return Math.round((time1 - time2) / (1000 * 60 * 60 * 24));
+}
+
+console.log(clacDaysPassed(+new Date(2026, 1, 12), +new Date(2026, 1, 22)));
 
 setInterval(setLabelTime, 1000 * 60);
 
