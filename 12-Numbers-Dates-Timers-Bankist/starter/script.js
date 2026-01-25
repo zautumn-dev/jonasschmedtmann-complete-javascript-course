@@ -193,6 +193,35 @@ const updateUI = function (acc) {
 // Event handlers
 let currentAccount;
 
+const LOGIN_TIME = 5 * 60;
+let intervalTimer = null;
+let loginTime = LOGIN_TIME;
+
+function logoutTimer() {
+  if (loginTime === 0) {
+    clearInterval(intervalTimer);
+    labelWelcome.textContent = 'Log in to get started';
+    containerApp.style.opacity = 0;
+    currentAccount = null;
+  }
+
+  const minute = String(Math.floor(loginTime / 60)).padStart(2, '0');
+  const secound = String(loginTime % 60).padStart(2, '0');
+
+  labelTimer.textContent = `${minute}:${secound}`;
+
+  loginTime--;
+}
+
+function recoverInterval() {
+  intervalTimer && clearInterval(intervalTimer);
+
+  // 配置定时器
+  loginTime = LOGIN_TIME;
+  intervalTimer = setInterval(logoutTimer, 1000);
+  logoutTimer();
+}
+
 btnLogin.addEventListener('click', function (e) {
   // Prevent form from submitting
   e.preventDefault();
@@ -200,7 +229,6 @@ btnLogin.addEventListener('click', function (e) {
   currentAccount = accounts.find(
     acc => acc.username === inputLoginUsername.value,
   );
-  console.log(currentAccount);
 
   if (currentAccount?.pin === Number(inputLoginPin.value)) {
     // Display UI and message
@@ -217,6 +245,8 @@ btnLogin.addEventListener('click', function (e) {
       hour: '2-digit',
       minute: '2-digit',
     });
+
+    recoverInterval();
 
     // Update UI
     updateUI(currentAccount);
@@ -246,6 +276,8 @@ btnTransfer.addEventListener('click', function (e) {
 
     // Update UI
     updateUI(currentAccount);
+
+    recoverInterval();
   }
 });
 
@@ -263,6 +295,8 @@ btnLoan.addEventListener('click', function (e) {
     updateUI(currentAccount);
   }
   inputLoanAmount.value = '';
+
+  recoverInterval();
 });
 
 btnClose.addEventListener('click', function (e) {
@@ -286,6 +320,8 @@ btnClose.addEventListener('click', function (e) {
   }
 
   inputCloseUsername.value = inputClosePin.value = '';
+
+  recoverInterval();
 });
 
 let sorted = false;
@@ -362,4 +398,3 @@ function formatTime(
     ...options,
   }).format(date);
 }
-setLabelTime();
